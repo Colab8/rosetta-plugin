@@ -1,0 +1,289 @@
+openapi: 3.1.0
+info:
+  title: Rosetta — Customs Intelligence API
+  description: |
+    AI-powered customs classification, duty calculation, PGA screening, and
+    compliance analysis for international trade. Covers 217 jurisdictions with
+    multi-model AI engine backed by 10.5M product digital twins.
+  version: 1.0.0
+  contact:
+    name: Colab8
+    email: carlos@colab8.com
+    url: https://askrosetta.ai
+
+servers:
+  - url: https://api.askrosetta.ai
+    description: Production (EU)
+
+paths:
+  /api/v1/classify:
+    post:
+      operationId: classifyProduct
+      summary: Classify a product to HTS/HS codes
+      description: |
+        Returns the correct Harmonized Tariff Schedule code for any product.
+        Supports multi-jurisdiction classification (US, UK, EU, CA, MX, AU, IN, BR, KR, JP, CH).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - product_description
+              properties:
+                product_description:
+                  type: string
+                  description: Full product description including material, use, composition
+                  example: "Men's cotton woven dress shirt, 100% cotton, long sleeve"
+                country_of_origin:
+                  type: string
+                  description: ISO country name or code
+                  example: "China"
+                value_usd:
+                  type: number
+                  description: Declared value in USD
+                  example: 25.00
+                jurisdictions:
+                  type: array
+                  items:
+                    type: string
+                  description: List of jurisdiction codes (US, UK, EU, CA, MX, etc.)
+                  default: ["US"]
+                  example: ["US", "UK", "EU"]
+      responses:
+        '200':
+          description: Classification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hts_code:
+                    type: string
+                    example: "6205.20.2065"
+                  description:
+                    type: string
+                    example: "Men's shirts, cotton, not knitted"
+                  duty_rate:
+                    type: string
+                    example: "19.7%"
+                  confidence:
+                    type: number
+                    example: 0.94
+                  source:
+                    type: string
+                    example: "claude-opus-4-6"
+                  reasoning:
+                    type: string
+
+  /api/v1/duty:
+    post:
+      operationId: calculateDuty
+      summary: Calculate customs duties, taxes, and landed cost
+      description: |
+        Full duty breakdown including base duty, MPF, HMF, Section 301/232 tariffs,
+        and total landed cost. Accounts for trade agreements, de minimis thresholds,
+        and special programs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - hts_code
+                - declared_value
+                - country_of_origin
+              properties:
+                hts_code:
+                  type: string
+                  description: HTS code (6-10 digits)
+                  example: "6205.20.2065"
+                declared_value:
+                  type: number
+                  description: Declared value in USD
+                  example: 5000.00
+                country_of_origin:
+                  type: string
+                  example: "China"
+                destination_state:
+                  type: string
+                  description: US state code (2 letters)
+                  example: "CA"
+                transport_mode:
+                  type: string
+                  enum: [ocean, air, truck]
+                  default: ocean
+      responses:
+        '200':
+          description: Duty calculation breakdown
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hts_code:
+                    type: string
+                  declared_value:
+                    type: number
+                  base_duty:
+                    type: number
+                  base_duty_rate:
+                    type: string
+                  mpf:
+                    type: number
+                  hmf:
+                    type: number
+                  section_301:
+                    type: number
+                  total_duty_and_fees:
+                    type: number
+                  landed_cost:
+                    type: number
+                  section_321_eligible:
+                    type: boolean
+
+  /api/v1/pga:
+    post:
+      operationId: screenPGA
+      summary: Screen for Partner Government Agency requirements
+      description: |
+        Determines which US government agencies (FDA, EPA, USDA, CPSC, FCC, TTB, DEA, NHTSA)
+        require clearance for an imported product. Returns required filings, processing times,
+        and compliance warnings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - product_description
+              properties:
+                product_description:
+                  type: string
+                  example: "Vitamin D3 dietary supplement capsules, 5000 IU"
+                hts_code:
+                  type: string
+                  description: HTS code if already classified
+                intended_use:
+                  type: string
+                  description: How the product will be used
+                  example: "retail sale as dietary supplement"
+      responses:
+        '200':
+          description: PGA screening results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requires_pga:
+                    type: boolean
+                  agencies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        agency:
+                          type: string
+                        requirements:
+                          type: array
+                          items:
+                            type: string
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                  estimated_processing_days:
+                    type: string
+
+  /api/v1/analyze:
+    post:
+      operationId: fullComplianceAnalysis
+      summary: Run full import compliance analysis
+      description: |
+        End-to-end pipeline: HTS classification, duty calculation, PGA screening,
+        entry type recommendation, and declaration readiness check — all in one call.
+        Returns a structured compliance report.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - product_description
+                - declared_value
+                - country_of_origin
+              properties:
+                product_description:
+                  type: string
+                  example: "Lithium-ion battery pack, 48V 20Ah, for electric bicycle"
+                declared_value:
+                  type: number
+                  example: 2000.00
+                country_of_origin:
+                  type: string
+                  example: "South Korea"
+                destination_state:
+                  type: string
+                  example: "TX"
+                transport_mode:
+                  type: string
+                  enum: [ocean, air, truck]
+                  default: ocean
+                intended_use:
+                  type: string
+                jurisdictions:
+                  type: array
+                  items:
+                    type: string
+                  default: ["US"]
+      responses:
+        '200':
+          description: Full compliance report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  classification:
+                    type: object
+                    properties:
+                      hts_code:
+                        type: string
+                      description:
+                        type: string
+                      confidence:
+                        type: number
+                  duty:
+                    type: object
+                    properties:
+                      total_duty_and_fees:
+                        type: number
+                      landed_cost:
+                        type: number
+                  pga:
+                    type: object
+                    properties:
+                      requires_pga:
+                        type: boolean
+                      agencies:
+                        type: array
+                        items:
+                          type: string
+                  entry_type:
+                    type: object
+                    properties:
+                      recommended:
+                        type: string
+                      name:
+                        type: string
+                  declaration_ready:
+                    type: boolean
+                  missing_documents:
+                    type: array
+                    items:
+                      type: string
