@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "askrosetta": {
+      "type": "http",
+      "url": "https://mcp.askrosetta.ai/mcp"
+    }
+  }
+}

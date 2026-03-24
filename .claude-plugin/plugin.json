@@ -1,12 +1,9 @@
 {
-  "name": "rosetta",
-  "description": "AI-powered customs intelligence — HTS classification, duty calculation, PGA screening, and full compliance analysis for international trade. Powered by AskRosetta's multi-model engine across 217 jurisdictions.",
-  "version": "1.0.0",
+  "name": "trade-compliance",
+  "version": "2.0.0",
+  "description": "Classify products to HTS codes, calculate customs duties and landed cost, screen FDA/EPA/CPSC requirements, and run full import compliance analysis. Powered by AskRosetta — 176K customs rulings, 30K tariff lines, 7 PGA agencies. Supports English, Spanish, and Vietnamese.",
   "author": {
     "name": "Colab8",
     "email": "carlos@colab8.com"
-  },
-  "homepage": "https://askrosetta.ai",
-  "repository": "https://github.com/colab8/rosetta-plugin",
-  "license": "MIT"
+  }
 }

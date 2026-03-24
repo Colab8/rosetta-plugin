@@ -1,35 +1,35 @@
 ---
 name: comply
 description: Run full import compliance analysis — classify, duty, PGA, entry type, and declaration readiness in one shot using AskRosetta. Use for end-to-end import analysis.
-allowed-tools: Bash, Read
-argument-hint: [product description, value, origin]
+argument-hint: "<product description> <value> from <country>"
 ---
 
-# Rosetta Full Compliance Analysis
+# Full Compliance Analysis
 
-Run the complete Rosetta pipeline: HTS classification, duty calculation, PGA screening, entry type recommendation, and declaration readiness check — all in one call.
+Run the complete AskRosetta pipeline: HTS classification, duty calculation, PGA screening, entry type recommendation, and declaration readiness — all in one pass.
 
-## How to Use
+## When to Use
 
-Extract from user input:
-- Product description (required)
-- Declared value in USD (required)
-- Country of origin (required)
-- Optional: destination state, transport mode, intended use, material
+- User asks "how much will it cost to import X?"
+- User wants a complete compliance picture
+- User is preparing for a specific shipment
 
-## API Call
+## How It Works
+
+Use the `analyze_product` MCP tool, or call the quote endpoint:
 
 ```bash
-curl -s -X POST "https://api.askrosetta.ai/api/v1/analyze" \
+curl -s -X POST "https://api.askrosetta.ai/api/v1/quote" \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: ${ROSETTA_API_KEY:-$ASKROSETTA_API_KEY}" \
+  -H "X-API-Key: ${ASKROSETTA_API_KEY}" \
   -d '{
-    "product_description": "<description>",
-    "declared_value": <number>,
-    "country_of_origin": "<country>",
-    "destination_state": "<state>",
-    "transport_mode": "<ocean|air|truck>",
-    "intended_use": "<if specified>"
+    "products": [{
+      "description": "<description>",
+      "country_of_origin": "<country>",
+      "unit_value": <number>,
+      "quantity": <number>
+    }],
+    "shipping_method": "<ocean|air|truck>"
   }'
 ```
 
@@ -38,39 +38,31 @@ curl -s -X POST "https://api.askrosetta.ai/api/v1/analyze" \
 Present as a structured compliance report:
 
 ---
-**ROSETTA COMPLIANCE REPORT**
+**COMPLIANCE REPORT**
 
 **1. Classification**
 - HTS: `XXXX.XX.XXXX` — Description
-- Confidence: XX% | Source: model
+- Confidence: XX%
 
 **2. Duty & Fees**
 | Component | Amount |
 |-----------|--------|
-| Base Duty (X.X%) | $XXX.XX |
+| Base Duty | $XXX.XX |
+| Section 301 | $XXX.XX |
 | MPF | $XX.XX |
 | HMF | $XX.XX |
-| **Total** | **$X,XXX.XX** |
 | **Landed Cost** | **$X,XXX.XX** |
 
 **3. PGA Requirements**
 - FDA: Required / Not required
 - EPA: Required / Not required
-- Other: ...
 
 **4. Entry Type**
-- Recommended: Type XX — Name
-- Section 321 eligible: Yes/No
-
-**5. Declaration Readiness**: READY / NEEDS ATTENTION
-- Missing documents: (list)
+- Recommended: Type XX — Informal/Formal
+- Bond required: Yes/No
+- Broker required: Yes/No
 ---
 
-## Fallback
+## Important
 
-If the `/api/v1/analyze` endpoint is unreachable, chain the individual calls:
-1. `/rosetta-classify` to get HTS code
-2. `/rosetta-duty` with the HTS code
-3. `/rosetta-pga` for agency screening
-
-Or use MCP tool `analyze_product` if available.
+This is intelligence, not legal advice. For actual customs filing, the user must work with a licensed customs broker.

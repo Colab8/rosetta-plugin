@@ -1,28 +1,31 @@
 ---
 name: pga
-description: Screen products for FDA, EPA, USDA, CPSC, FCC, and other PGA (Partner Government Agency) requirements using AskRosetta. Use when checking regulatory compliance for imports.
-allowed-tools: Bash, Read
-argument-hint: [product description]
+description: Screen products for FDA, EPA, USDA, CPSC, FCC, and other government agency requirements using AskRosetta. Use when checking regulatory compliance for US imports.
+argument-hint: "<product description>"
 ---
 
-# Rosetta PGA Screening
+# PGA Screening
 
-Determine which US government agencies require clearance for an imported product. Screens against FDA, EPA, USDA, CPSC, FCC, TTB, DEA, NHTSA, and other Partner Government Agencies.
+Determine which US Partner Government Agencies (PGA) require clearance for an imported product. Screens FDA, EPA, USDA, CPSC, FCC, ATF, DOT, and others — with specific CFR regulation citations.
 
-## How to Use
+## When to Use
 
-Extract from user input:
-- Product description
-- Optional: HTS code, intended use, material composition
+- User asks "does X need FDA approval?"
+- User wants to know regulatory requirements for an import
+- User is checking if a product needs special permits or testing
 
-## API Call
+## How It Works
+
+Use the `determine_pga_requirements` MCP tool with the product description.
+
+If MCP is unavailable:
 
 ```bash
 curl -s -X POST "https://api.askrosetta.ai/api/v1/pga" \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: ${ROSETTA_API_KEY:-$ASKROSETTA_API_KEY}" \
+  -H "X-API-Key: ${ASKROSETTA_API_KEY}" \
   -d '{
-    "product_description": "$ARGUMENTS",
+    "product_description": "<description>",
     "hts_code": "<if known>",
     "intended_use": "<if specified>"
   }'
@@ -30,20 +33,17 @@ curl -s -X POST "https://api.askrosetta.ai/api/v1/pga" \
 
 ## Response Format
 
-Present as:
-
 **PGA Screening Result**
 
-- **Requires PGA**: Yes/No
+- **Requires PGA clearance**: Yes/No
 - **Agencies**:
-  - FDA — Prior Notice required, product registration
-  - EPA — TSCA certification
+  - FDA — Prior Notice required (21 CFR 1.276), product registration
+  - EPA — TSCA certification (15 USC 2601)
+  - CPSC — Testing required (16 CFR 1500)
   - (etc.)
-- **Warnings**: any flags or holds
-- **Est. Processing Time**: X-Y business days
+- **Risk Level**: Low / Medium / High / Critical
+- **Warnings**: any holds or flags
 
-If no agencies are flagged, confirm the product appears to be exempt from PGA requirements but recommend verifying with a licensed customs broker for high-value shipments.
+Always include CFR citations — users need them for compliance records.
 
-## Fallback
-
-Use MCP tool `determine_pga_requirements` if API is unreachable.
+If no agencies are flagged, confirm the product appears exempt but recommend verifying with a licensed customs broker for high-value or novel product shipments.
