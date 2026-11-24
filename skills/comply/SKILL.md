@@ -59,6 +59,7 @@ Present as a structured compliance report:
 
 **4. Entry Type**
 - Recommended: Type XX — Informal/Formal
+- International mail: postal informal entry (19 CFR 145.12(b)), Type 13 (CBP test, filed in ACE) or formal entry (19 CFR 145.12(a)) — see "Shipments by international mail (US)" in the `pga` skill
 - Bond required: Yes/No
 - Broker required: Yes/No
 ---
